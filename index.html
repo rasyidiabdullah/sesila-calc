@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>seSILA calc</title>
+</head>
+<body>
+    <h2>seSILA calc - Kalkulator Litar Selari dan Sesiri</h2>
+
+    <!-- Pilihan litar -->
+    <label for="circuitType">Jenis Litar:</label>
+    <select id="circuitType">
+        <option value="series">Litar Sesiri</option>
+        <option value="parallel">Litar Selari</option>
+    </select>
+
+    <br><br>
+
+    <!-- Input untuk rintangan -->
+    <label for="resistances">Masukkan nilai rintangan (dipisahkan dengan koma):</label>
+    <input type="text" id="resistances" placeholder="Contoh: 10,20,30">
+
+    <br><br>
+
+    <!-- Butang kira -->
+    <button onclick="calculateResistance()">Kira</button>
+
+    <h3>Jumlah Rintangan: <span id="result">0</span> Ω</h3>
+
+    <script>
+        function calculateResistance() {
+            // Dapatkan jenis litar yang dipilih
+            var circuitType = document.getElementById('circuitType').value;
+
+            // Dapatkan nilai rintangan dari input
+            var resistances = document.getElementById('resistances').value.split(',').map(function(item) {
+                return parseFloat(item.trim());
+            });
+
+            // Periksa jika nilai rintangan kosong
+            if (resistances.some(isNaN)) {
+                alert("Sila masukkan nilai rintangan yang sah!");
+                return;
+            }
+
+            var totalResistance = 0;
+
+            if (circuitType === "series") {
+                // Kirakan jumlah rintangan untuk litar sesiri (jumlah rintangan = R1 + R2 + ... + Rn)
+                totalResistance = resistances.reduce(function(sum, resistance) {
+                    return sum + resistance;
+                }, 0);
+            } else if (circuitType === "parallel") {
+                // Kirakan jumlah rintangan untuk litar selari (1/R_total = 1/R1 + 1/R2 + ... + 1/Rn)
+                var reciprocalSum = resistances.reduce(function(sum, resistance) {
+                    return sum + 1 / resistance;
+                }, 0);
+                totalResistance = 1 / reciprocalSum;
+            }
+
+            // Paparkan hasil
+            document.getElementById('result').innerText = totalResistance.toFixed(2);
+        }
+    </script>
+</body>
+</html>
