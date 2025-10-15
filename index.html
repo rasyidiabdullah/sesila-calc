@@ -1,67 +1,164 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>seSILA calc</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OHMCalc@SKE</title>
+
+  <!-- Tambahan untuk versi aplikasi (iPhone) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OHMCalc@SKE">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/btk5mYQ.png">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f6fa, #dce8ff);
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background-color: #002f6c;
+      color: white;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .menu {
+      margin: 20px;
+    }
+    button {
+      background-color: #0059b3;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0073e6;
+    }
+    .content {
+      display: none;
+      margin-top: 20px;
+    }
+    input, select {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+    }
+    .result {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 15px;
+      width: 80%;
+      margin: 20px auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
 <body>
-    <h2>seSILA calc - Kalkulator Litar Selari dan Sesiri</h2>
+  <header>⚡ OHMCalc@SKE</header>
+  
+  <div class="menu">
+    <button onclick="showMenu('menu1')">Menu 1: Nilai melalui Warna</button>
+    <button onclick="showMenu('menu2')">Menu 2: Warna melalui Nilai</button>
+    <button onclick="showMenu('menu3')">Menu 3: Litar Siri/Selari</button>
+  </div>
 
-    <!-- Pilihan litar -->
-    <label for="circuitType">Jenis Litar:</label>
+  <div id="menu1" class="content">
+    <h3>Nilai Perintang Berdasarkan Warna</h3>
+    <label>Warna 1:</label>
+    <select id="color1"></select>
+    <label>Warna 2:</label>
+    <select id="color2"></select>
+    <label>Warna 3 (Multiplier):</label>
+    <select id="color3"></select>
+    <br><button onclick="calculateResistor()">Kira Nilai</button>
+    <div class="result" id="result1"></div>
+  </div>
+
+  <div id="menu2" class="content">
+    <h3>Warna Kod Berdasarkan Nilai Perintang</h3>
+    <input type="number" id="resistorValue" placeholder="Masukkan nilai ohm">
+    <button onclick="calculateColors()">Tunjuk Warna</button>
+    <div class="result" id="result2"></div>
+  </div>
+
+  <div id="menu3" class="content">
+    <h3>Pengiraan Jumlah Rintangan</h3>
+    <label>Jenis Litar:</label>
     <select id="circuitType">
-        <option value="series">Litar Sesiri</option>
-        <option value="parallel">Litar Selari</option>
-    </select>
+      <option value="siri">Siri</option>
+      <option value="selari">Selari</option>
+    </select><br>
+    <input type="text" id="resistorList" placeholder="Contoh: 100,150,50">
+    <button onclick="calculateTotal()">Kira Jumlah</button>
+    <div class="result" id="result3"></div>
+  </div>
 
-    <br><br>
+  <script>
+    const colorCodes = {
+      hitam: 0, coklat: 1, merah: 2, jingga: 3, kuning: 4,
+      hijau: 5, biru: 6, ungu: 7, kelabu: 8, putih: 9
+    };
 
-    <!-- Input untuk rintangan -->
-    <label for="resistances">Masukkan nilai rintangan (dipisahkan dengan koma):</label>
-    <input type="text" id="resistances" placeholder="Contoh: 10,20,30">
+    const colors = Object.keys(colorCodes);
+    const selects = [document.getElementById('color1'), document.getElementById('color2'), document.getElementById('color3')];
+    selects.forEach(sel => {
+      colors.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
+        sel.appendChild(opt);
+      });
+    });
 
-    <br><br>
+    function showMenu(menuId) {
+      document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+      document.getElementById(menuId).style.display = 'block';
+    }
 
-    <!-- Butang kira -->
-    <button onclick="calculateResistance()">Kira</button>
+    function calculateResistor() {
+      const c1 = colorCodes[document.getElementById('color1').value];
+      const c2 = colorCodes[document.getElementById('color2').value];
+      const c3 = colorCodes[document.getElementById('color3').value];
+      const nilai = ((c1 * 10) + c2) * Math.pow(10, c3);
+      document.getElementById('result1').innerHTML = `Nilai perintang: <b>${nilai} Ω</b>`;
+    }
 
-    <h3>Jumlah Rintangan: <span id="result">0</span> Ω</h3>
+    function calculateColors() {
+      const value = parseInt(document.getElementById('resistorValue').value);
+      if (isNaN(value)) return alert("Masukkan nilai sah.");
+      let log = 0;
+      while (Math.pow(10, log) <= value / 10) log++;
+      const multiplier = log - 1;
+      const base = Math.round(value / Math.pow(10, multiplier));
+      const c1 = Math.floor(base / 10);
+      const c2 = base % 10;
+      const warna1 = Object.keys(colorCodes).find(k => colorCodes[k] === c1);
+      const warna2 = Object.keys(colorCodes).find(k => colorCodes[k] === c2);
+      const warna3 = Object.keys(colorCodes).find(k => colorCodes[k] === multiplier);
+      document.getElementById('result2').innerHTML = `Warna: <b>${warna1}, ${warna2}, ${warna3}</b>`;
+    }
 
-    <script>
-        function calculateResistance() {
-            // Dapatkan jenis litar yang dipilih
-            var circuitType = document.getElementById('circuitType').value;
-
-            // Dapatkan nilai rintangan dari input
-            var resistances = document.getElementById('resistances').value.split(',').map(function(item) {
-                return parseFloat(item.trim());
-            });
-
-            // Periksa jika nilai rintangan kosong
-            if (resistances.some(isNaN)) {
-                alert("Sila masukkan nilai rintangan yang sah!");
-                return;
-            }
-
-            var totalResistance = 0;
-
-            if (circuitType === "series") {
-                // Kirakan jumlah rintangan untuk litar sesiri (jumlah rintangan = R1 + R2 + ... + Rn)
-                totalResistance = resistances.reduce(function(sum, resistance) {
-                    return sum + resistance;
-                }, 0);
-            } else if (circuitType === "parallel") {
-                // Kirakan jumlah rintangan untuk litar selari (1/R_total = 1/R1 + 1/R2 + ... + 1/Rn)
-                var reciprocalSum = resistances.reduce(function(sum, resistance) {
-                    return sum + 1 / resistance;
-                }, 0);
-                totalResistance = 1 / reciprocalSum;
-            }
-
-            // Paparkan hasil
-            document.getElementById('result').innerText = totalResistance.toFixed(2);
-        }
-    </script>
+    function calculateTotal() {
+      const type = document.getElementById('circuitType').value;
+      const values = document.getElementById('resistorList').value.split(',').map(v => parseFloat(v));
+      if (values.some(isNaN)) return alert("Masukkan nilai yang sah, pisahkan dengan koma.");
+      let total = 0;
+      if (type === 'siri') {
+        total = values.reduce((a,b)=>a+b,0);
+      } else {
+        total = 1 / values.reduce((a,b)=>a + (1/b), 0);
+      }
+      document.getElementById('result3').innerHTML = `Jumlah Rintangan: <b>${total.toFixed(2)} Ω</b>`;
+    }
+  </script>
 </body>
 </html>
